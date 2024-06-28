@@ -211,13 +211,13 @@ def parse_args():
 
     parser.add_argument('--dataset', default='covid',
                         help='Dataset to use (covid or isic)')
-    parser.add_argument('--test-dataset-dir', default='/data/brian.hu/COVID/data/test',
+    parser.add_argument('--test-dataset-dir', default='./data/COVID/test',
                         help='Test dataset directory path')
-    parser.add_argument('--test-image-list', default='./test_COVIDx4.txt',
+    parser.add_argument('--test-image-list', default='./test_COVIDx9A.txt',
                         help='Test image list')
     parser.add_argument('--mask-dir', default=None,
                         help='Segmentation masks path (if used)')
-    parser.add_argument('--results', default=None,
+    parser.add_argument('--results', default='./results/covid_densenet121_seed_0_epoch_20_ckpt.npz',
                         help='Results file to load')
     parser.add_argument('--model', default='densenet121',
                         help='Model to use (densenet121 or resnet50)')
@@ -236,7 +236,7 @@ def parse_args():
                         help='Number of data loading workers')
     parser.add_argument('--save-dir', default='./saliency',
                         help='Result save directory')
-    parser.add_argument('--resume', default='',
+    parser.add_argument('--resume', default='./checkpoints/covid_densenet121_seed_0_epoch_20_ckpt.pth',
                         help='Resume from checkpoint')
 
     return parser.parse_args()
