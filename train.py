@@ -47,8 +47,10 @@ def retrieval_accuracy(output, target, topk=(1,)):
         batch_size = target.size(0)
 
         _, pred = output.topk(maxk, 1, True, True)
-        pred = target[pred].t()
-        correct = pred.eq(target[None])
+        # pred = target[pred].t()
+        # correct = pred.eq(target[None])
+        pred = target.to(output.device)[pred].t()  # 确保target和pred在同一设备上
+        correct = pred.eq(target[None].to(output.device))
 
         res = []
         for k in topk:
@@ -63,7 +65,8 @@ def evaluate(model, loader, device):
     embeds, labels = [], []
 
     for data in loader:
-        samples, _labels = data[0].to(device), data[1]
+        # samples, _labels = data[0].to(device), data[1]
+        samples, _labels = data[0].to(device), data[1].to(device)  # 确保_labels在正确的设备上
         out = model(samples)
         embeds.append(out)
         labels.append(_labels)
@@ -72,7 +75,9 @@ def evaluate(model, loader, device):
     labels = torch.cat(labels, dim=0)
 
     dists = -torch.cdist(embeds, embeds)
-    dists.fill_diagonal_(torch.tensor(float('-inf')))
+    # dists.fill_diagonal_(torch.tensor(float('-inf')))
+    dists.fill_diagonal_(torch.tensor(float('-inf')).to(device))  # 确保这个 tensor 在正确的设备上
+
 
     # top-k accuracy (i.e. R@K)
     accuracy = retrieval_accuracy(dists, labels)[0].item()
@@ -204,11 +209,11 @@ def parse_args():
 
     parser.add_argument('--dataset', default='covid',
                         help='Dataset to use (covid or isic)')
-    parser.add_argument('--dataset-dir', default='/data/brian.hu/COVID/data/',
+    parser.add_argument('--dataset-dir', default='./data/COVID',
                         help='Dataset directory path')
-    parser.add_argument('--train-image-list', default='./train_split.txt',
+    parser.add_argument('--train-image-list', default='./train_COVIDx9A.txt',
                         help='Train image list')
-    parser.add_argument('--test-image-list', default='./test_COVIDx4.txt',
+    parser.add_argument('--test-image-list', default='./test_COVIDx9A.txt',
                         help='Test image list')
     parser.add_argument('--mask-dir', default=None,
                         help='Segmentation masks path (if used)')

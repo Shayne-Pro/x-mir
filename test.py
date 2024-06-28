@@ -125,7 +125,8 @@ def evaluate(model, loader, device, args):
     embeds, labels = [], []
 
     for data in loader:
-        samples, _labels = data[0].to(device), data[1]
+        # samples, _labels = data[0].to(device), data[1]
+        samples, _labels = data[0].to(device), data[1].to(device)  # Ensure labels are on the same device
         out = model(samples)
         embeds.append(out)
         labels.append(_labels)
@@ -134,17 +135,20 @@ def evaluate(model, loader, device, args):
     labels = torch.cat(labels, dim=0)
 
     dists = -torch.cdist(embeds, embeds)
-    dists.fill_diagonal_(torch.tensor(float('-inf')))
+    # dists.fill_diagonal_(torch.tensor(float('-inf')))
+    dists.fill_diagonal_(torch.tensor(float('-inf')).to(device))  # Ensure the diagonal tensor is on the same device
+
 
     # top-k accuracy (i.e. R@K)
     kappas = [1, 5, 10]
     accuracy = retrieval_accuracy(dists, labels, topk=kappas)
-    accuracy = torch.stack(accuracy).numpy()
+    # accuracy = torch.stack(accuracy).numpy()
+    accuracy = torch.stack(accuracy).cpu().numpy()  # Move to cpu for numpy compatibility
     print('>> R@K{}: {}%'.format(kappas, np.around(accuracy, 2)))
 
     # mean average precision and mean precision (i.e. mAP and pr)
     ranks = torch.argsort(dists, dim=0, descending=True)
-    mAP, _, pr, _ = compute_map(ranks.cpu().numpy(), labels.numpy(), kappas)
+    mAP, _, pr, _ = compute_map(ranks.cpu().numpy(), labels.cpu().numpy(), kappas)
     print('>> mAP: {:.2f}%'.format(mAP * 100.0))
     print('>> mP@K{}: {}%'.format(kappas, np.around(pr * 100.0, 2)))
 
@@ -220,9 +224,9 @@ def parse_args():
 
     parser.add_argument('--dataset', default='covid',
                         help='Dataset to use (covid or isic)')
-    parser.add_argument('--test-dataset-dir', default='/data/brian.hu/COVID/data/test',
+    parser.add_argument('--test-dataset-dir', default='./data/COVID/test',
                         help='Test dataset directory path')
-    parser.add_argument('--test-image-list', default='./test_COVIDx4.txt',
+    parser.add_argument('--test-image-list', default='./test_COVIDx9A.txt',
                         help='Test image list')
     parser.add_argument('--mask-dir', default=None,
                         help='Segmentation masks path (if used)')
