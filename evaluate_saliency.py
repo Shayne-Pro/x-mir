@@ -12,7 +12,7 @@ from evaluation import CausalMetric, gkern
 
 # NOTE: Edit the dataset_type and path to model_weights here
 dataset_type = 'covid'
-model_weights = '/data/brian.hu/covid_saliency/covid_densenet121_embed_256_seed_1_epoch_20_ckpt.pth'
+model_weights = './checkpoints/covid_densenet121_seed_0_epoch_20_ckpt.pth'
 
 
 class InsDel():
@@ -98,8 +98,12 @@ class AverageCounter():
 
 
 def prep_image_(file_n):
-    query_image = Image.open(os.path.join(
-        query_img_path, file_n)).convert('RGB')
+    # print("file_n: "+file_n)
+    # print("query_image: "+os.path.join(query_img_path, file_n))
+    # query_image = Image.open(os.path.join(
+    #     query_img_path, file_n)).convert('RGB')
+    query_image = Image.open(file_n).convert('RGB')
+
     query_image_tensor = transform(query_image).unsqueeze_(0).cuda()
     return query_image_tensor
 
@@ -121,11 +125,11 @@ class_labels = {}
 
 if dataset_type == 'covid':
     # NOTE: Edit the path to saliency maps and images here
-    main_path = '/data/brian.hu/covid_saliency/simatt/'
-    query_img_path = '/data/brian.hu/COVID/data/test/'
+    main_path = './saliency'
+    query_img_path = './data/COVID/test/'
     valid_class = ['pneumonia', 'normal']
     # Unravel labels here
-    with open('test_COVIDx4.txt', 'r') as f:
+    with open('test_COVIDx9A.txt', 'r') as f:
         for line in f.readlines():
             label = line.split()[2]
             if label not in valid_class:
@@ -167,8 +171,14 @@ key_dict = {}
 get_insert_dele = InsDel(model)
 for file_n in os.listdir(main_path):
     print(file_n)
-    query_image_tensor = prep_image_(file_n)
+    file_n1 = os.path.join(query_img_path, file_n)
+    query_image_tensor = prep_image_(file_n1)
     retrieval_names = os.listdir(os.path.join(main_path, file_n))
+
+    sal_map.setdefault(file_n.split('.')[0], [])
+    ret_map.setdefault(file_n.split('.')[0], [])
+    key_dict.setdefault(file_n.split('.')[0], [])
+
     for r_n in retrieval_names:
         try:
             key_dict[file_n.split('/')[0].split('.')[0]] = [r_n]
