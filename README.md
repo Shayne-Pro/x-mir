@@ -1,5 +1,20 @@
 # X-MIR: EXplainable Medical Image Retrieval
 
+This repository mirrors/adapts [Kitware's upstream X-MIR code](https://gitlab.kitware.com/brianhhu/x-mir). Method descriptions, publication claims, acknowledgments, and the [license](LICENSE) below belong to the original work. This snapshot is presented as a research reproduction resource, without claiming authorship of the upstream method.
+
+## Local snapshot quick start
+
+Use a Python/PyTorch/torchvision combination compatible with the historical implementation. The upstream authors reported PyTorch 1.9.0 on Ubuntu 18.04; that statement is preserved below and is not a fresh compatibility test. Additional imports include NumPy, SciPy, scikit-learn, Pillow, matplotlib, and tqdm.
+
+- Run commands from this repository's root. Obtain authorized COVIDx or ISIC data separately.
+- The bundled initialization file is `model.pth`; older instructions referred to `model.pt`. Trained retrieval checkpoints are written under `checkpoints/`.
+- For COVID data, `--dataset-dir` is the parent of `train/` and `test/`.
+- For ISIC training, `--dataset-dir` is the parent of `ISIC-2017_Training_Data/` and `ISIC-2017_Test_v2_Data/`.
+- Training/evaluation require compatible weights and the same embedding dimension. `--help` lists the actual flags.
+- Data files, checkpoints, and saliency maps have not been regenerated during this maintenance update.
+
+## Original project documentation
+
 Code accompanying the WACV '22 paper "X-MIR: EXplainable Medical Image Retrieval"
 
 This code was developed on Ubuntu 18.04 and has been confirmed to work with Pytorch 1.9.0. Please note that newer versions of Pytorch may introduce breaking changes. Other dependencies (such as scikit-learn) may also be required.
@@ -20,7 +35,7 @@ We use data from the ISIC 2017 skin lesion classification challenge (please see 
 ### Pretrained chest X-ray classification model
 [CheXNet](https://github.com/arnoweng/CheXNet)
 
-The pretrained Pytorch model weights are provided as `model.pt` in this repository. Please see the Github repo for more information about how this model was trained. When working with chest X-rays, we initialize our similarity models with these pretrained weights.
+The pretrained Pytorch model weights are provided as `model.pth` in this repository. Please see the Github repo for more information about how this model was trained. When working with chest X-rays, we initialize our similarity models with these pretrained weights.
 
 ### Similarity learning using triplet loss
 [Torchvision Reference](https://github.com/pytorch/vision/tree/master/references/similarity)
@@ -33,13 +48,13 @@ To train a model, run `python train.py`. By default, trained models will be save
 For example, to train a baseline chest X-ray similarity model:
 
 ```python
- python train.py --dataset-dir '/data/brian.hu/COVID/data' --resume model.pt
+ python train.py --dataset-dir './data/COVID' --resume model.pth
  ```
 
  To train a skin lesion similarity model with an additional 256-dimension embedding layer:
 
  ```python
- python train.py --dataset 'isic' --dataset-dir '/data/brian.hu/isic/ISIC-2017_Training_Data' --train-image-list 'ISIC-2017_Training_Part3_GroundTruth.csv' --test-image-list 'ISIC-2017_Test_v2_Part3_GroundTruth_balanced.csv' --embedding-dim 256
+ python train.py --dataset 'isic' --dataset-dir './data/ISIC' --train-image-list 'ISIC-2017_Training_Part3_GroundTruth.csv' --test-image-list 'ISIC-2017_Test_v2_Part3_GroundTruth_balanced.csv' --embedding-dim 256
  ```
 
  **Note**: We also provide experimental functionality to train an "anomaly" version of the model (using the `--anomaly` flag), where the anomaly class (e.g. COVID or melanoma) is not used during training. See the `./anomaly` directory for more information.
@@ -50,13 +65,13 @@ To test a model, run `python test.py`. You must pass an appropriate model path f
 For example, to evaluate the COVID chest X-ray model trained above:
 
 ```python
-python test.py --test-dataset-dir '/data/brian.hu/COVID/data/test' --resume 'covid_densenet121_seed_0_epoch_20_ckpt.pth'
+python test.py --test-dataset-dir './data/COVID/test' --resume 'covid_densenet121_seed_0_epoch_20_ckpt.pth'
 ```
 
  To evaluate the trained ISIC skin lesion model above:
 
  ```python
-python test.py --dataset 'isic' --test-dataset-dir '/data/brian.hu/isic/ISIC-2017_Test_v2_Data' --test-image-list 'ISIC-2017_Test_v2_Part3_GroundTruth_balanced.csv' --resume 'isic_densenet121_embed_256_seed_0_epoch_20_ckpt.pth' --embedding-dim 256
+python test.py --dataset 'isic' --test-dataset-dir './data/ISIC/ISIC-2017_Test_v2_Data' --test-image-list 'ISIC-2017_Test_v2_Part3_GroundTruth_balanced.csv' --resume 'isic_densenet121_embed_256_seed_0_epoch_20_ckpt.pth' --embedding-dim 256
 ```
 
 ## Similarity-based saliency maps
